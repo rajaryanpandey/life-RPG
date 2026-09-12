@@ -2,8 +2,6 @@ import { Routes, Route } from "react-router-dom";
 
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -27,8 +25,8 @@ function App() {
         <Routes>
 
             {/* Public */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
+            
+            <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
             {/* Protected */}

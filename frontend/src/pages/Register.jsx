@@ -177,7 +177,7 @@ try {
                 <div className="auth-footer">
                     <span>Already have an account?</span>
 
-                    <Link to="/login">
+                    <Link to="/">
                         Login
                     </Link>
                 </div>
