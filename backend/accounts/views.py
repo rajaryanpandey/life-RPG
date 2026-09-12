@@ -16,14 +16,18 @@ class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        profile = PlayerProfile.objects.get(user=request.user)
+        profile, created = PlayerProfile.objects.get_or_create(
+            user=request.user
+        )
 
         serializer = PlayerProfileSerializer(profile)
 
         return Response(serializer.data)
 
     def put(self, request):
-        profile = PlayerProfile.objects.get(user=request.user)
+        profile, created = PlayerProfile.objects.get_or_create(
+            user=request.user
+        )
 
         serializer = PlayerProfileSerializer(
             profile,

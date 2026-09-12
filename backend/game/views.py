@@ -12,6 +12,7 @@ from .models import (
     Achievement,
     UserAchievement,
 )
+from accounts.models import PlayerProfile
 
 from .serializers import (
     CharacterSerializer,
@@ -19,6 +20,16 @@ from .serializers import (
     InventoryItemSerializer,
     AchievementSerializer,
     UserAchievementSerializer,
+)
+from quests.models import Quest, QuestCompletion
+from quests.serializers import QuestSerializer
+
+from game.utils import (
+    calculate_level,
+    get_attribute_for_category,
+    calculate_gold_reward,
+    update_streak,
+    xp_required_for_level,  # NEW
 )
 
 
@@ -183,3 +194,134 @@ class UserAchievementView(APIView):
         )
 
         return Response(serializer.data)
+
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        character, created = Character.objects.get_or_create(
+            user=request.user
+        )
+
+        # Get the user's profile
+        profile, created = PlayerProfile.objects.get_or_create(
+            user=request.user,
+            defaults={
+                "display_name": request.user.username
+            }
+        )
+
+        # Get user's quests
+        quests = Quest.objects.filter(
+            user=request.user
+        )
+
+        # Calculate quest statistics
+        total_quests = quests.count()
+        completed_quests = quests.filter(completed=True).count()
+        pending_quests = quests.filter(completed=False).count()
+
+        # Get the 5 most recently created quests
+        recent_quests = quests.order_by("-created_at")[:5]
+
+        # Get the 5 most recent quest completions
+        recent_completions = (
+            QuestCompletion.objects
+            .filter(user=request.user)
+            .select_related("quest")
+            .order_by("-completed_at")[:5]
+        )
+
+        # Get user's unlocked achievements
+        unlocked_achievements = (
+            UserAchievement.objects
+            .filter(user=request.user)
+            .select_related("achievement")
+            .order_by("-unlocked_at")[:5]
+        )
+
+                # Get user's inventory
+        inventory = (
+            InventoryItem.objects
+            .filter(user=request.user)
+            .select_related("reward")
+            .order_by("-purchased_at")[:5]
+        )
+
+        # Calculate XP required for the next level
+        next_level = character.level + 1
+        next_level_xp = xp_required_for_level(next_level)
+
+        # XP required for the current level
+        current_level_xp = xp_required_for_level(character.level)
+
+        # XP earned inside the current level
+        xp_in_level = character.total_xp - current_level_xp
+
+        # XP needed to reach the next level
+        xp_for_next_level = (
+            next_level_xp - current_level_xp
+        )
+
+        # Calculate XP progress percentage
+        if xp_for_next_level > 0:
+            xp_progress = (
+                xp_in_level / xp_for_next_level
+            ) * 100
+        else:
+            xp_progress = 100
+
+        return Response({
+            "character": CharacterSerializer(
+                character
+            ).data,
+
+            "xp_progress": {
+                "current_level_xp": current_level_xp,
+                "next_level_xp": next_level_xp,
+                "xp_in_level": xp_in_level,
+                "xp_for_next_level": xp_for_next_level,
+                "percentage": round(
+                    xp_progress,
+                    2
+                ),
+            },
+
+            "stats": {
+                "total_quests": total_quests,
+                "completed_quests": completed_quests,
+                "pending_quests": pending_quests,
+            },
+
+            "recent_quests": QuestSerializer(
+                recent_quests,
+                many=True
+            ).data,
+
+            "recent_completions": [
+              {
+                    "id": completion.id,
+
+                    # The original quest may have been deleted.
+                   "quest_id": completion.quest.id if completion.quest else None,
+                   "quest_title": completion.quest.title if completion.quest else "Deleted quest",
+                   "category": completion.quest.category if completion.quest else None,
+                   "difficulty": completion.quest.difficulty if completion.quest else None,
+
+                   # Historical reward data is always preserved.
+                   "xp_earned": completion.xp_earned,
+                   "gold_earned": completion.gold_earned,
+                   "completed_at": completion.completed_at,
+               }
+              for completion in recent_completions
+              ],
+
+            "unlocked_achievements": UserAchievementSerializer(
+                unlocked_achievements,
+                many=True
+            ).data,
+
+            "achievement_count": UserAchievement.objects.filter(
+                user=request.user
+            ).count(),
+        })

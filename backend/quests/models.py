@@ -64,7 +64,9 @@ class QuestCompletion(models.Model):
 
     quest = models.ForeignKey(
         Quest,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="completion_history"
     )
 
@@ -83,4 +85,6 @@ class QuestCompletion(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user.username} completed {self.quest.title}"
+    # Handle the case where the original quest was deleted
+      quest_title = self.quest.title if self.quest else "Deleted quest"
+      return f"{self.user.username} completed {quest_title}"

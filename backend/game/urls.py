@@ -4,6 +4,7 @@ from .views import (
     CharacterView,
     RewardListView,
     PurchaseRewardView,
+    DashboardView,  # NEW
     InventoryView,
     AchievementListView,
     UserAchievementView,
@@ -46,5 +47,11 @@ urlpatterns = [
         "achievements/unlocked/",
         UserAchievementView.as_view(),
         name="user-achievements"
+    ),
+
+    path(
+    "dashboard/",
+    DashboardView.as_view(),
+    name="dashboard"
     ),
 ]

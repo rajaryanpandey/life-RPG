@@ -1,9 +1,18 @@
+from .models import Achievement, UserAchievement
+
+from datetime import timedelta
+from django.utils import timezone
+
+
+
 def xp_required_for_level(level):
     """
     Returns the total XP required to reach a level.
 
     Higher levels require progressively more XP.
     """
+    if level<=0 :
+        return 0
 
     return 100 * (level - 1) ** 2 + 100
 
@@ -95,3 +104,57 @@ def update_streak(character, last_completion_date):
         character.longest_streak = character.current_streak
 
     return character.current_streak
+
+
+
+def check_achievements(user, character):
+    """
+    Check whether the player has reached any achievement targets.
+    Unlock achievements automatically when their requirements are met.
+    """
+
+    # Count completed quests
+    completed_quests = user.quest_completions.count()
+
+    # Check every available achievement
+    achievements = Achievement.objects.all()
+
+    for achievement in achievements:
+
+        # Skip achievements already unlocked
+        already_unlocked = UserAchievement.objects.filter(
+            user=user,
+            achievement=achievement
+        ).exists()
+
+        if already_unlocked:
+            continue
+
+        unlocked = False
+
+        # Quest-based achievements
+        if achievement.achievement_type == "QUESTS":
+            if completed_quests >= achievement.target_value:
+                unlocked = True
+
+        # Streak-based achievements
+        elif achievement.achievement_type == "STREAK":
+            if character.longest_streak >= achievement.target_value:
+                unlocked = True
+
+        # XP-based achievements
+        elif achievement.achievement_type == "XP":
+            if character.total_xp >= achievement.target_value:
+                unlocked = True
+
+        # Gold-based achievements
+        elif achievement.achievement_type == "GOLD":
+            if character.gold >= achievement.target_value:
+                unlocked = True
+
+        # Create the unlock record
+        if unlocked:
+            UserAchievement.objects.create(
+                user=user,
+                achievement=achievement
+            )

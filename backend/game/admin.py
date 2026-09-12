@@ -1,7 +1,12 @@
 from django.contrib import admin
 
-from .models import Character, Reward, InventoryItem
-
+from .models import (
+    Character,
+    Reward,
+    InventoryItem,
+    Achievement,
+    UserAchievement,
+)
 @admin.register(Character)
 class CharacterAdmin(admin.ModelAdmin):
 
@@ -55,4 +60,42 @@ class InventoryItemAdmin(admin.ModelAdmin):
     search_fields = (
         "user__username",
         "reward__name",
+    )
+
+@admin.register(Achievement)
+class AchievementAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "achievement_type",
+        "target_value",
+        "created_at",
+    )
+
+    list_filter = (
+        "achievement_type",
+    )
+
+    search_fields = (
+        "name",
+        "description",
+    )
+
+
+@admin.register(UserAchievement)
+class UserAchievementAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "user",
+        "achievement",
+        "unlocked_at",
+    )
+
+    list_filter = (
+        "achievement",
+    )
+
+    search_fields = (
+        "user__username",
+        "achievement__name",
     )

@@ -18,6 +18,8 @@ from game.utils import (
     get_attribute_for_category,
     calculate_gold_reward,
     update_streak,
+    check_achievements,  # NEW
+
 )
 
 
@@ -49,6 +51,19 @@ class QuestDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Quest.objects.filter(
             user=self.request.user
         )
+
+    def perform_update(self, serializer):
+        # Completed quests are permanently recorded
+        if serializer.instance.completed:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError(
+                {
+                    "detail": "Completed quests cannot be edited."
+                }
+            )
+
+        serializer.save()
 
 
 class CompleteQuestView(APIView):
@@ -133,7 +148,6 @@ class CompleteQuestView(APIView):
         )
 
         character.save()
-
         # Mark quest as completed
         quest.completed = True
         quest.completed_at = timezone.now()
@@ -145,6 +159,11 @@ class CompleteQuestView(APIView):
             user=request.user,
             xp_earned=xp_earned,
             gold_earned=gold_earned,
+        )
+        # Check and unlock achievements after updating the character
+        check_achievements(
+        request.user,
+        character
         )
 
         return Response(
@@ -198,6 +217,7 @@ class QuestHistoryView(APIView):
         data = []
 
         for completion in history:
+            quest = completion.quest
             data.append(
                 {
                     "id": completion.id,
