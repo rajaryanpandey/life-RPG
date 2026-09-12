@@ -50,7 +50,7 @@ try {
         password: formData.password,
     });
 
-    navigate("/login");
+    navigate("/");
 } catch (error) {
     console.error("Registration error:", error);
 
