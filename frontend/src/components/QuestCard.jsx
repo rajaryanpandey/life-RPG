@@ -5,7 +5,13 @@ import {
     Star,
 } from "lucide-react";
 
-function QuestCard({ quest }) {
+function QuestCard({ quest, onComplete }) {
+    const handleComplete = () => {
+        if (!quest.completed && onComplete) {
+            onComplete(quest.id);
+        }
+    };
+
     return (
         <article
             className={`quest-card ${
@@ -21,7 +27,7 @@ function QuestCard({ quest }) {
 
                 <div className="quest-xp">
                     <Star size={14} />
-                    +{quest.xp} XP
+                    +{quest.xp_reward} XP
                 </div>
 
             </div>
@@ -38,11 +44,12 @@ function QuestCard({ quest }) {
                 </div>
 
                 <button
+                    type="button"
                     className={`quest-complete-button ${
-                        quest.completed
-                            ? "completed"
-                            : ""
+                        quest.completed ? "completed" : ""
                     }`}
+                    onClick={handleComplete}
+                    disabled={quest.completed}
                 >
                     {quest.completed ? (
                         <>
