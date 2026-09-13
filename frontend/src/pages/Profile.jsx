@@ -104,7 +104,7 @@ function Profile() {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
 
-        navigate("/login");
+        navigate("/");
     };
 
     if (loading) {
@@ -305,7 +305,7 @@ function Profile() {
 
                     <button
                         className="security-button"
-                        onClick={() => navigate("/forgot-password")}
+                        disabled
                     >
                         <Lock size={18} />
 
@@ -313,7 +313,7 @@ function Profile() {
                             <strong>Change Password</strong>
 
                             <span>
-                                Update your account password.
+                                the feature will be added later
                             </span>
                         </div>
                     </button>
