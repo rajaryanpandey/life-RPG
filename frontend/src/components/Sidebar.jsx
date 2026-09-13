@@ -19,7 +19,7 @@ function Sidebar({ isOpen, onClose }) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
 
-        navigate("/login");
+        navigate("/");
     };
 
     const navigationItems = [

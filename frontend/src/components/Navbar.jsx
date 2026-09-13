@@ -8,7 +8,7 @@ function Navbar({ onMenuClick }) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
 
-        navigate("/login");
+        navigate("/");
     };
 
     return (
